@@ -33,7 +33,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push devcontainer image
-        uses: devcontainers/ci@0.3
+        uses: devcontainers/ci@v0.3
         with:
           imageName: ghcr.io/${{ github.repository_owner }}/devcontainers/java-gradle-mvn-claude
           imageTag: latest
