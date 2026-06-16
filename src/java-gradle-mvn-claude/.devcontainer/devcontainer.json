@@ -1,0 +1,69 @@
+{
+  "name": "java25-gradle9-devcontainer",
+
+  // Ubuntu 24.04 (noble) base image — comes with a non-root "vscode" user, git, zsh, etc.
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  "features": {
+    // JDK 25 + Gradle 9.1.0 + Maven 3.9.15, all via the official "java" feature (SDKMAN! under the hood).
+    // jdkDistro "open" = Oracle OpenJDK GPL builds, i.e. the same builds published at jdk.java.net.
+    // Gradle 9.1.0 is the minimum Gradle version that can run its own daemon on JDK 25.
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "25",
+      "jdkDistro": "open",
+      "installGradle": true,
+      "gradleVersion": "9.1.0",
+      "installMaven": true,
+      "mavenVersion": "3.9.15",
+      "installAnt": false
+    },
+
+    // GitHub CLI — auth, PRs, issues, releases, gh repo clone, etc. from the terminal.
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    },
+
+    // Node.js is a prerequisite for the Claude Code feature below.
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+
+    // Claude Code CLI. Also wires up the VS Code extension automatically.
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",               // Extension Pack for Java: language support, debugger, test runner, Maven, project manager, IntelliCode
+        "vscjava.vscode-gradle",                  // Gradle for Java: task explorer + Gradle build server integration
+        "GitHub.vscode-pull-request-github",      // Issues/PRs/reviews in the editor, pairs with gh cli
+        "anthropic.claude-code",                  // Claude Code panel inside VS Code
+        "EditorConfig.EditorConfig",
+        "streetsidesoftware.code-spell-checker",  // Spell checking in identifiers, comments, and strings
+        "redhat.vscode-xml",                      // Schema-aware editing for pom.xml and other XML configs
+        "redhat.vscode-yaml",                     // YAML editing with schema validation (CI files, K8s, etc.)
+        "SonarSource.sonarlint-vscode",           // In-editor bug and code smell detection
+        "eamodio.gitlens"                         // Inline git blame, history, and authorship
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.compile.nullAnalysis.mode": "automatic",
+        "gradle.nestedProjects": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // Persist Claude Code's login/config across container rebuilds.
+  "mounts": [
+    "source=claude-code-config-${devcontainerId},target=/home/vscode/.claude,type=volume"
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+
+  "remoteUser": "vscode",
+
+  "postCreateCommand": "java -version && gradle --version && mvn -version && gh --version && claude --version"
+}

@@ -1,0 +1,46 @@
+name: "Release Dev Container Templates"
+
+on:
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: "Publish Templates"
+        uses: devcontainers/action@v1
+        with:
+          publish-templates: "true"
+          base-path-to-templates: "./src"
+          generate-docs: "true"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create PR for documentation
+        id: push_image_info
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          echo "Start."
+          # Configure git
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config pull.rebase false
+
+          branch=automated-documentation-update-$GITHUB_RUN_ID
+          git checkout -b $branch
+          message="Automated documentation update"
+
+          # Add the README files for all templates
+          git add */**/README.md
+          git diff-index --quiet HEAD || (git commit -m "$message [skip ci]" && git push origin "$branch" && gh pr create --title "$message" --body "$message" --base main)

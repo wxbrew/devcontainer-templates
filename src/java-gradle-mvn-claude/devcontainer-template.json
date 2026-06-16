@@ -1,0 +1,7 @@
+{
+  "id": "java-gradle-mvn-claude",
+  "version": "1.0.0",
+  "name": "Java 25 + Gradle/Maven + GitHub CLI + Claude Code",
+  "description": "Full Java toolchain with Claude Code preinstalled",
+  "options": {}
+}
