@@ -166,6 +166,62 @@ filters: |
 
 ---
 
+### Claude Code authentication
+
+Claude Code requires a **Pro, Max, Team, or Enterprise** Claude.ai subscription, or a **Console** API key. The free plan does not include access.
+
+#### Browser login (personal subscriptions — recommended first-time setup)
+
+Open a terminal inside the container and run `claude`. On first launch it opens a browser window to sign in with your Claude.ai account.
+
+> Inside a container the browser redirect may not complete automatically. If that happens, press `c` to copy the login URL, paste it into your host browser, then paste the confirmation code back into the terminal.
+
+Credentials are stored in `~/.claude/` inside the container, which is mounted as a named Docker volume — so **you only need to log in once per container instance**; credentials survive restarts and rebuilds.
+
+#### API key (Console accounts — recommended for teams)
+
+Get a key from [console.anthropic.com](https://console.anthropic.com) → **API Keys**, then add it to your **VS Code user settings** so it is forwarded into every devcontainer terminal automatically:
+
+```jsonc
+// Ctrl+Shift+P → "Preferences: Open User Settings (JSON)"
+{
+  "terminal.integrated.env.linux": {
+    "ANTHROPIC_API_KEY": "sk-ant-..."
+  }
+}
+```
+
+Use `terminal.integrated.env.osx` on macOS or `terminal.integrated.env.windows` on Windows.
+
+The devcontainer also reads `ANTHROPIC_API_KEY` from your host shell environment via `remoteEnv`, so exporting it in `~/.bashrc` / `~/.zshrc` works as a fallback.
+
+#### Long-lived token (CI / headless environments)
+
+For pipelines or SSH-only sessions where browser login is not available, generate a one-year OAuth token:
+
+```bash
+claude setup-token
+```
+
+Store the printed token in VS Code user settings (same pattern as above, key `CLAUDE_CODE_OAUTH_TOKEN`) or as a CI secret exposed as `CLAUDE_CODE_OAUTH_TOKEN`. This token authenticates against your subscription and is scoped to inference only.
+
+#### Authentication precedence
+
+When multiple credentials are present Claude Code picks in this order:
+
+| Priority | Credential |
+|---|---|
+| 1 | Cloud provider env vars (`CLAUDE_CODE_USE_BEDROCK` / `CLAUDE_CODE_USE_VERTEX` / `CLAUDE_CODE_USE_FOUNDRY`) |
+| 2 | `ANTHROPIC_AUTH_TOKEN` (bearer token for LLM gateways) |
+| 3 | `ANTHROPIC_API_KEY` |
+| 4 | `apiKeyHelper` script |
+| 5 | `CLAUDE_CODE_OAUTH_TOKEN` |
+| 6 | Subscription OAuth from `/login` |
+
+Full reference: [code.claude.com/docs/en/authentication](https://code.claude.com/docs/en/authentication)
+
+---
+
 ## Publishing
 
 Templates are published to GHCR automatically when the **Release Dev Container Templates** workflow is run manually from the Actions tab (`workflow_dispatch` on `main`). The workflow:
