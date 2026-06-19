@@ -63,6 +63,15 @@
     "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
   },
 
+  // Forward Claude Code credentials from the host environment into the container.
+  // Set either variable once in your host shell profile (~/.bashrc / ~/.zshrc) and
+  // it will be available automatically every time the container starts.
+  // If neither is set the container still starts; use `claude` to log in interactively.
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}"
+  },
+
   "remoteUser": "vscode",
 
   "postCreateCommand": "java -version && gradle --version && mvn -version && gh --version && claude --version"
