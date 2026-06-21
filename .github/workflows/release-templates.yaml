@@ -1,15 +1,12 @@
 name: "Release Dev Container Templates"
 
-# This workflow publishes templates to GHCR and auto-generates documentation.
-# To build and push pre-built runtime images, run "Release Dev Container Images" instead.
-
 on:
   workflow_dispatch:
     branches:
       - main
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -18,13 +15,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Publish Templates"
         uses: devcontainers/action@v1

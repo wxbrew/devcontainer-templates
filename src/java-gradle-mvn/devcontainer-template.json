@@ -1,0 +1,7 @@
+{
+  "id": "java-gradle-mvn",
+  "version": "1.0.0",
+  "name": "Java 25 + Gradle/Maven + GitHub CLI",
+  "description": "Lean Java toolchain — no Node.js or Claude Code. Ideal for CI/CD pipelines and build agents.",
+  "options": {}
+}

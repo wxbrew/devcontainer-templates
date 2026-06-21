@@ -1,0 +1,41 @@
+name: "Release Dev Container Images"
+
+# Builds and pushes the pre-built runtime images to GHCR.
+# Only the lean baseline image (java-gradle-mvn) is built here — it has no
+# Node.js or Claude Code, making it suitable for CI/build-agent use.
+# The Claude-enabled image can be built locally from the java-gradle-mvn-claude template.
+
+on:
+  workflow_dispatch:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - "src/java-gradle-mvn/.devcontainer/**"
+
+jobs:
+  build-baseline-image:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push baseline devcontainer image
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/${{ github.repository_owner }}/devcontainers/java-gradle-mvn
+          imageTag: latest
+          push: always
+          configFile: ./src/java-gradle-mvn/.devcontainer/devcontainer.json
