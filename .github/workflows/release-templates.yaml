@@ -2,8 +2,6 @@ name: "Release Dev Container Templates"
 
 on:
   workflow_dispatch:
-    branches:
-      - main
 
 jobs:
   publish:

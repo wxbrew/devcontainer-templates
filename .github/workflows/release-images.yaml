@@ -7,8 +7,6 @@ name: "Release Dev Container Images"
 
 on:
   workflow_dispatch:
-    branches:
-      - main
   push:
     branches:
       - main
