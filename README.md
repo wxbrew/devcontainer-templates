@@ -11,8 +11,8 @@ Reusable Dev Container templates published to GHCR and consumable via the VS Cod
 
 ### Choosing a template
 
-- **`java-gradle-mvn` (baseline):** Use this whenever you need a repeatable build environment without internet access to Anthropic or without a Claude subscription. This image is pre-built and published automatically on every change to its source files.
-- **`java-gradle-mvn-claude` (AI variant):** Use this for interactive development where you want Claude Code available inside the container. This template is published to GHCR but its image is not pre-built by CI — build it locally or in a dev environment where Claude credentials are available.
+- **`java-gradle-mvn` (baseline):** Use this whenever you need a repeatable build environment without internet access to Anthropic or without a Claude subscription. A pre-built image is published automatically on every change to its source files.
+- **`java-gradle-mvn-claude` (AI variant):** Use this for interactive development where you want Claude Code available inside the container. A pre-built image is also published to GHCR — downstream users can pull it directly without building from scratch.
 
 ---
 
@@ -20,8 +20,8 @@ Reusable Dev Container templates published to GHCR and consumable via the VS Cod
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `release.yaml` — Release Dev Container Templates | Manual (`workflow_dispatch` on `main`) | Publishes **all** templates to GHCR and opens a PR with auto-generated docs |
-| `release-images.yaml` — Release Dev Container Images | Manual **or** push to `main` touching `src/java-gradle-mvn/**` | Builds and pushes the **lean baseline image** (`java-gradle-mvn`) to GHCR |
+| `release.yaml` — Release Dev Container Templates | Manual (`workflow_dispatch`) | Publishes **all** templates to GHCR and opens a PR with auto-generated docs |
+| `release-images.yaml` — Release Dev Container Images | Manual **or** push to `main` touching either template's `.devcontainer/**` | Builds and pushes **both** pre-built images (`java-gradle-mvn` and `java-gradle-mvn-claude`) to GHCR |
 | `test-pr.yaml` — CI - Test Templates | Pull request | Smoke-tests changed templates; Claude variant only runs when its files change |
 
 ---
@@ -192,7 +192,7 @@ Templates are published to GHCR automatically when the **Release Dev Container T
 1. Pushes each template under `src/` to `ghcr.io/<org>/devcontainer-templates/<template-id>`.
 2. Auto-generates a `README.md` inside each `src/<template-id>/` directory and opens a PR to commit it.
 
-The **Release Dev Container Images** workflow builds and pushes pre-built images to GHCR. It runs automatically when baseline template files change on `main`, and can also be triggered manually.
+The **Release Dev Container Images** workflow builds and pushes pre-built images for both templates to GHCR. It runs automatically when either template's devcontainer files change on `main`, and can also be triggered manually.
 
 To consume a published template:
 
