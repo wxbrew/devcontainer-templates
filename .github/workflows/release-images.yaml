@@ -1,0 +1,70 @@
+name: "Release Dev Container Images"
+
+# Builds and pushes pre-built runtime images to GHCR.
+#
+# Two images are published:
+#   java-gradle-mvn         — lean baseline (Java/Gradle/Maven/GitHub CLI), no Node.js or Claude Code.
+#                             Use this for CI/CD pipelines and build agents.
+#   java-gradle-mvn-claude  — AI-assisted development image, adds Node.js and Claude Code CLI.
+#                             Use this for local interactive development.
+#
+# Both jobs are triggered automatically when their respective source files change on main,
+# and can also be run manually via workflow_dispatch.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/java-gradle-mvn/.devcontainer/**"
+      - "src/java-gradle-mvn-claude/.devcontainer/**"
+
+jobs:
+  build-baseline-image:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push baseline devcontainer image
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/${{ github.repository_owner }}/devcontainers/java-gradle-mvn
+          imageTag: latest
+          push: always
+          configFile: ./src/java-gradle-mvn/.devcontainer/devcontainer.json
+
+  build-claude-image:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Claude devcontainer image
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/${{ github.repository_owner }}/devcontainers/java-gradle-mvn-claude
+          imageTag: latest
+          push: always
+          configFile: ./src/java-gradle-mvn-claude/.devcontainer/devcontainer.json

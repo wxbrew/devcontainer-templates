@@ -7,26 +7,47 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      templates: ${{ steps.filter.outputs.changes }}
+      # Whether the lean baseline template files changed.
+      baseline_changed: ${{ steps.filter.outputs.java-gradle-mvn }}
+      # Whether Claude-specific files changed — gates the heavier AI-variant test.
+      claude_changed: ${{ steps.filter.outputs.java-gradle-mvn-claude }}
     steps:
       - uses: dorny/paths-filter@v2
         id: filter
         with:
           filters: |
+            java-gradle-mvn: ./**/java-gradle-mvn/**
             java-gradle-mvn-claude: ./**/java-gradle-mvn-claude/**
 
-  test:
+  # Fast smoke test for the lean baseline template.
+  # Runs whenever baseline files change and has no Node/Claude pull overhead.
+  test-baseline:
     needs: [detect-changes]
+    if: needs.detect-changes.outputs.baseline_changed == 'true'
     runs-on: ubuntu-latest
     continue-on-error: true
-    strategy:
-      matrix:
-        templates: ${{ fromJSON(needs.detect-changes.outputs.templates) }}
     steps:
       - uses: actions/checkout@v3
 
-      - name: Smoke test for '${{ matrix.templates }}'
+      - name: Smoke test for 'java-gradle-mvn'
         id: smoke_test
         uses: ./.github/actions/smoke-test
         with:
-          template: "${{ matrix.templates }}"
+          template: "java-gradle-mvn"
+
+  # Heavier smoke test for the Claude-enabled template.
+  # Only runs when java-gradle-mvn-claude files actually changed, since it
+  # pulls Node.js and the Claude Code feature which adds significant build time.
+  test-claude:
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.claude_changed == 'true'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Smoke test for 'java-gradle-mvn-claude'
+        id: smoke_test
+        uses: ./.github/actions/smoke-test
+        with:
+          template: "java-gradle-mvn-claude"

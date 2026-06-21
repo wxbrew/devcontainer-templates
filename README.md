@@ -4,9 +4,25 @@ Reusable Dev Container templates published to GHCR and consumable via the VS Cod
 
 ## Templates
 
-| Template | Description |
-|---|---|
-| [java-gradle-mvn-claude](src/java-gradle-mvn-claude/) | Java 25 + Gradle + Maven + GitHub CLI + Claude Code |
+| Template | Description | Use case |
+|---|---|---|
+| [java-gradle-mvn](src/java-gradle-mvn/) | Java 25 + Gradle + Maven + GitHub CLI | **CI/CD pipelines and build agents** — lean image, no Node.js or Claude Code |
+| [java-gradle-mvn-claude](src/java-gradle-mvn-claude/) | Java 25 + Gradle + Maven + GitHub CLI + Claude Code | **Local AI-assisted development** — includes Node.js and Claude Code CLI |
+
+### Choosing a template
+
+- **`java-gradle-mvn` (baseline):** Use this whenever you need a repeatable build environment without internet access to Anthropic or without a Claude subscription. A pre-built image is published automatically on every change to its source files.
+- **`java-gradle-mvn-claude` (AI variant):** Use this for interactive development where you want Claude Code available inside the container. A pre-built image is also published to GHCR — downstream users can pull it directly without building from scratch.
+
+---
+
+## Workflows
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `release.yaml` — Release Dev Container Templates | Manual (`workflow_dispatch`) | Publishes **all** templates to GHCR and opens a PR with auto-generated docs |
+| `release-images.yaml` — Release Dev Container Images | Manual **or** push to `main` touching either template's `.devcontainer/**` | Builds and pushes **both** pre-built images (`java-gradle-mvn` and `java-gradle-mvn-claude`) to GHCR |
+| `test-pr.yaml` — CI - Test Templates | Pull request | Smoke-tests changed templates; Claude variant only runs when its files change |
 
 ---
 
@@ -154,15 +170,18 @@ Extensions are listed in `customizations.vscode.extensions` in `.devcontainer/de
 
 1. Create `src/<template-id>/devcontainer-template.json` and `src/<template-id>/.devcontainer/devcontainer.json`.
 2. Add a test script at `test/<template-id>/test.sh` (use the existing one as a reference).
-3. Register the template in `.github/workflows/test-pr.yaml` under `detect-changes`:
+3. Register the template in `.github/workflows/test-pr.yaml` under the appropriate `detect-changes` filter:
+   - For a **lean/baseline** template (no AI tooling), add it to the `baseline_templates` filter list so it is included in the `test-baseline` job:
 
 ```yaml
 filters: |
-  java-gradle-mvn-claude: ./**/java-gradle-mvn-claude/**
+  java-gradle-mvn: ./**/java-gradle-mvn/**
   your-new-template: ./**/your-new-template/**   # ← add this line
 ```
 
-4. Add a row to the table at the top of this README.
+   - For an **AI-enabled** template, follow the pattern in `test-claude` and add a dedicated conditional job.
+4. If the template warrants a pre-built image, add it to `.github/workflows/release-images.yaml`.
+5. Add a row to the table at the top of this README.
 
 ---
 
@@ -173,9 +192,17 @@ Templates are published to GHCR automatically when the **Release Dev Container T
 1. Pushes each template under `src/` to `ghcr.io/<org>/devcontainer-templates/<template-id>`.
 2. Auto-generates a `README.md` inside each `src/<template-id>/` directory and opens a PR to commit it.
 
+The **Release Dev Container Images** workflow builds and pushes pre-built images for both templates to GHCR. It runs automatically when either template's devcontainer files change on `main`, and can also be triggered manually.
+
 To consume a published template:
 
 ```bash
+# Lean baseline (recommended for pipelines/build agents):
+devcontainer templates apply \
+  --template-id ghcr.io/<your-github-org>/devcontainer-templates/java-gradle-mvn \
+  --workspace-folder .
+
+# AI-assisted development variant:
 devcontainer templates apply \
   --template-id ghcr.io/<your-github-org>/devcontainer-templates/java-gradle-mvn-claude \
   --workspace-folder .
@@ -189,10 +216,13 @@ Or select it in the VS Code command palette: **Dev Containers: Add Dev Container
 
 Pull requests trigger `.github/workflows/test-pr.yaml`, which detects which templates changed, spins up a real container with `@devcontainers/cli`, and runs `test/<template-id>/test.sh` inside it.
 
+- **Baseline templates** are tested on every PR that touches their files (fast, no Node/Claude pull).
+- **Claude variant** is only tested when `java-gradle-mvn-claude` files change, since it pulls Node.js and the Claude Code feature.
+
 To run the smoke test locally:
 
 ```bash
 npm install -g @devcontainers/cli
-.github/actions/smoke-test/build.sh java-gradle-mvn-claude
-.github/actions/smoke-test/test.sh  java-gradle-mvn-claude
+.github/actions/smoke-test/build.sh java-gradle-mvn
+.github/actions/smoke-test/test.sh  java-gradle-mvn
 ```
