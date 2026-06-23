@@ -74,5 +74,5 @@
 
   "remoteUser": "vscode",
 
-  "postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.claude && java -version && gradle --version && mvn -version && gh --version && claude --version"
+  "postCreateCommand": "mkdir -p /home/vscode/.claude && sudo chown -R vscode:vscode /home/vscode/.claude && java -version && gradle --version && mvn -version && gh --version && claude --version"
 }
